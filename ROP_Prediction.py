@@ -40,6 +40,9 @@ PLOT_PATH = Path("rop_blind_predictions.png")
 CORRELATION_PLOT_PATH = Path("rop_training_correlation.png")
 DISTRIBUTION_PLOT_PATH = Path("rop_training_distributions.png")
 FEATURE_IMPORTANCE_PLOT_PATH = Path("rop_feature_importance.png")
+ROP_DEPTH_TRAIN_PLOT_PATH = Path("rop_vs_depth_training.png")
+ROP_DEPTH_BLIND_PLOT_PATH = Path("rop_vs_depth_validation.png")
+DEPTH_COLUMN = "Hole Depth"
 
 
 def load_dataset(path: Path) -> pd.DataFrame:
@@ -198,6 +201,43 @@ def plot_predictions(
     plt.close()
 
 
+def plot_rop_vs_depth_scatter(
+    depth: np.ndarray,
+    y_actual: np.ndarray,
+    y_pred: np.ndarray,
+    output_path: Path,
+    title: str,
+) -> None:
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.scatter(
+        y_actual,
+        depth,
+        label="Actual ROP",
+        color="#4C72B0",
+        alpha=0.45,
+        s=14,
+        edgecolors="none",
+    )
+    ax.scatter(
+        y_pred,
+        depth,
+        label="Predicted ROP",
+        color="#C44E52",
+        alpha=0.45,
+        s=14,
+        edgecolors="none",
+    )
+    ax.set_xlabel("Rate Of Penetration (ROP)")
+    ax.set_ylabel("Hole Depth")
+    ax.invert_yaxis()
+    ax.set_title(title)
+    ax.legend(loc="best", fontsize=9)
+    ax.grid(True, alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def get_feature_importance_ranking(
     model_name: str,
     pipeline: Pipeline,
@@ -338,12 +378,29 @@ def main() -> None:
         title=f"Blind Test: Actual vs Predicted ROP ({best_name})",
     )
 
+    plot_rop_vs_depth_scatter(
+        x_train[DEPTH_COLUMN].to_numpy(),
+        y_train.to_numpy(),
+        y_train_pred,
+        ROP_DEPTH_TRAIN_PLOT_PATH,
+        title=f"Training Data: ROP vs Depth",
+    )
+    plot_rop_vs_depth_scatter(
+        x_blind[DEPTH_COLUMN].to_numpy(),
+        y_blind.to_numpy(),
+        y_blind_pred,
+        ROP_DEPTH_BLIND_PLOT_PATH,
+        title=f"Blind Validation Data: ROP vs Depth",
+    )
+
     print(f"\nSaved model to:                  {MODEL_PATH.resolve()}")
     print(f"Saved metrics to:                {METRICS_PATH.resolve()}")
     print(f"Saved correlation plot to:       {CORRELATION_PLOT_PATH.resolve()}")
     print(f"Saved distribution plot to:      {DISTRIBUTION_PLOT_PATH.resolve()}")
     if feature_importance_ranking:
         print(f"Saved feature importance plot to: {FEATURE_IMPORTANCE_PLOT_PATH.resolve()}")
+    print(f"Saved ROP vs depth (train) plot to: {ROP_DEPTH_TRAIN_PLOT_PATH.resolve()}")
+    print(f"Saved ROP vs depth (blind) plot to: {ROP_DEPTH_BLIND_PLOT_PATH.resolve()}")
     print(f"Saved prediction plot to:        {PLOT_PATH.resolve()}")
 
 
