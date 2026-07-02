@@ -39,6 +39,7 @@ METRICS_PATH = Path("rop_metrics.json")
 PLOT_PATH = Path("rop_blind_predictions.png")
 CORRELATION_PLOT_PATH = Path("rop_training_correlation.png")
 DISTRIBUTION_PLOT_PATH = Path("rop_training_distributions.png")
+FEATURE_IMPORTANCE_PLOT_PATH = Path("rop_feature_importance.png")
 
 
 def load_dataset(path: Path) -> pd.DataFrame:
@@ -197,17 +198,66 @@ def plot_predictions(
     plt.close()
 
 
-def print_feature_importance(model_name: str, pipeline: Pipeline, feature_names: list[str]) -> None:
+def get_feature_importance_ranking(
+    model_name: str,
+    pipeline: Pipeline,
+    feature_names: list[str],
+) -> list[dict[str, float | int | str]] | None:
     estimator = pipeline.named_steps["model"]
-    if not hasattr(estimator, "feature_importances_"):
-        print(f"\nFeature importance not available for {model_name}.")
-        return
 
-    importances = estimator.feature_importances_
-    ranked = sorted(zip(feature_names, importances), key=lambda item: item[1], reverse=True)
-    print(f"\nFeature importance ({model_name}):")
-    for feature, importance in ranked:
-        print(f"  {feature:25s}: {importance:.4f}")
+    if hasattr(estimator, "feature_importances_"):
+        scores = estimator.feature_importances_
+        score_label = "importance"
+    elif hasattr(estimator, "coef_"):
+        scores = np.abs(estimator.coef_)
+        score_label = "abs_coefficient"
+    else:
+        print(f"\nFeature importance not available for {model_name}.")
+        return None
+
+    ranked = sorted(zip(feature_names, scores), key=lambda item: item[1], reverse=True)
+    return [
+        {"rank": rank, "feature": feature, score_label: float(score)}
+        for rank, (feature, score) in enumerate(ranked, start=1)
+    ]
+
+
+def plot_feature_importance_ranking(
+    ranking: list[dict[str, float | int | str]],
+    model_name: str,
+    output_path: Path,
+) -> None:
+    score_key = "importance" if "importance" in ranking[0] else "abs_coefficient"
+    features = [str(item["feature"]) for item in ranking]
+    scores = [float(item[score_key]) for item in ranking]
+    ranks = [int(item["rank"]) for item in ranking]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    bars = ax.barh(features, scores, color="#4C72B0", alpha=0.85)
+    ax.invert_yaxis()
+    ax.set_xlabel("Importance score")
+    ax.set_title(f"Feature Importance Ranking ({model_name})")
+
+    for bar, score, rank in zip(bars, scores, ranks):
+        ax.text(
+            bar.get_width(),
+            bar.get_y() + bar.get_height() / 2,
+            f"  #{rank} ({score:.4f})",
+            va="center",
+            ha="left",
+            fontsize=9,
+        )
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def print_feature_importance(ranking: list[dict[str, float | int | str]], model_name: str) -> None:
+    score_key = "importance" if "importance" in ranking[0] else "abs_coefficient"
+    print(f"\nFeature importance ranking ({model_name}):")
+    for item in ranking:
+        print(f"  #{item['rank']} {item['feature']:25s}: {item[score_key]:.4f}")
 
 
 def main() -> None:
@@ -249,7 +299,16 @@ def main() -> None:
     print(f"  R2:   {blind_metrics['r2']:.4f}")
     print(f"  MAPE: {blind_metrics['mape_percent']:.2f}%")
 
-    print_feature_importance(best_name, best_model, FEATURE_COLUMNS)
+    feature_importance_ranking = get_feature_importance_ranking(
+        best_name, best_model, FEATURE_COLUMNS
+    )
+    if feature_importance_ranking:
+        print_feature_importance(feature_importance_ranking, best_name)
+        plot_feature_importance_ranking(
+            feature_importance_ranking,
+            best_name,
+            FEATURE_IMPORTANCE_PLOT_PATH,
+        )
 
     joblib.dump(
         {
@@ -266,6 +325,7 @@ def main() -> None:
         "cv_neg_rmse": cv_scores,
         "training_metrics": train_metrics,
         "blind_metrics": blind_metrics,
+        "feature_importance_ranking": feature_importance_ranking,
         "feature_columns": FEATURE_COLUMNS,
         "target_column": TARGET_COLUMN,
     }
@@ -278,11 +338,13 @@ def main() -> None:
         title=f"Blind Test: Actual vs Predicted ROP ({best_name})",
     )
 
-    print(f"\nSaved model to:              {MODEL_PATH.resolve()}")
-    print(f"Saved metrics to:            {METRICS_PATH.resolve()}")
-    print(f"Saved correlation plot to:   {CORRELATION_PLOT_PATH.resolve()}")
-    print(f"Saved distribution plot to:  {DISTRIBUTION_PLOT_PATH.resolve()}")
-    print(f"Saved prediction plot to:    {PLOT_PATH.resolve()}")
+    print(f"\nSaved model to:                  {MODEL_PATH.resolve()}")
+    print(f"Saved metrics to:                {METRICS_PATH.resolve()}")
+    print(f"Saved correlation plot to:       {CORRELATION_PLOT_PATH.resolve()}")
+    print(f"Saved distribution plot to:      {DISTRIBUTION_PLOT_PATH.resolve()}")
+    if feature_importance_ranking:
+        print(f"Saved feature importance plot to: {FEATURE_IMPORTANCE_PLOT_PATH.resolve()}")
+    print(f"Saved prediction plot to:        {PLOT_PATH.resolve()}")
 
 
 if __name__ == "__main__":
