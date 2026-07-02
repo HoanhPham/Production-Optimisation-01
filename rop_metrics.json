@@ -1,0 +1,30 @@
+{
+  "selected_model": "random_forest",
+  "cv_neg_rmse": {
+    "ridge": -40.299770314947104,
+    "random_forest": -25.400457613154778,
+    "gradient_boosting": -26.981030482913564
+  },
+  "training_metrics": {
+    "rmse": 6.666386951982316,
+    "mae": 3.417264157859476,
+    "r2": 0.9856935570500721,
+    "mape_percent": 3.7160511424018585
+  },
+  "blind_metrics": {
+    "rmse": 42.701355695664205,
+    "mae": 31.810369238610544,
+    "r2": 0.6555427868393684,
+    "mape_percent": 24.570921709816922
+  },
+  "feature_columns": [
+    "Hole Depth",
+    "Hook Load",
+    "Rotary RPM",
+    "Rotary Torque",
+    "Weight on Bit",
+    "Differential Pressure",
+    "Gamma at Bit"
+  ],
+  "target_column": "Rate Of Penetration"
+}
