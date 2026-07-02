@@ -1,22 +1,145 @@
 {
-  "selected_model": "random_forest",
-  "cv_neg_rmse": {
-    "ridge": -40.299770314947104,
-    "random_forest": -25.400457613154778,
-    "gradient_boosting": -26.981030482913564
+  "selected_model": "hist_gradient_boosting + random_forest",
+  "cv_search_results": {
+    "random_forest": {
+      "cv_rmse": 22.578111888933492,
+      "best_params": {
+        "max_depth": 12,
+        "max_features": 0.697390229473994,
+        "min_samples_leaf": 13,
+        "n_estimators": 390
+      }
+    },
+    "gradient_boosting": {
+      "cv_rmse": 23.122143621904563,
+      "best_params": {
+        "learning_rate": 0.058585870719555934,
+        "max_depth": 6,
+        "min_samples_leaf": 19,
+        "n_estimators": 284,
+        "subsample": 0.6682096494749166
+      }
+    },
+    "hist_gradient_boosting": {
+      "cv_rmse": 22.378424204663254,
+      "best_params": {
+        "l2_regularization": 0.06700979385989832,
+        "learning_rate": 0.033072759509091484,
+        "max_iter": 539,
+        "max_leaf_nodes": 31,
+        "min_samples_leaf": 20
+      }
+    }
   },
+  "oof_cv_rmse": {
+    "random_forest": 22.547724275102762,
+    "gradient_boosting": 23.228931633584,
+    "hist_gradient_boosting": 22.426897470305445,
+    "gradient_boosting + hist_gradient_boosting": 22.48765109845758,
+    "gradient_boosting + random_forest": 22.224664480638843,
+    "hist_gradient_boosting + random_forest": 21.950956193562334,
+    "gradient_boosting + hist_gradient_boosting + random_forest": 22.04780084546383
+  },
+  "cv_strategy": "GroupKFold(5), group = Hole Depth // 500 ft",
   "training_metrics": {
-    "rmse": 6.666386951982316,
-    "mae": 3.417264157859476,
-    "r2": 0.9856935570500721,
-    "mape_percent": 3.7160511424018585
+    "rmse": 10.133693500021248,
+    "mae": 6.311765930378592,
+    "r2": 0.966941270488197,
+    "mape_percent": 6.476951448122459
   },
   "blind_metrics": {
-    "rmse": 42.701355695664205,
-    "mae": 31.810369238610544,
-    "r2": 0.6555427868393684,
-    "mape_percent": 24.570921709816922
+    "rmse": 39.68619708877942,
+    "mae": 29.240561311918338,
+    "r2": 0.7024698874440174,
+    "mape_percent": 22.124464276170183
   },
+  "baseline_blind_metrics": {
+    "model": "random_forest (raw features, random KFold CV)",
+    "rmse": 42.7,
+    "mae": 31.81,
+    "r2": 0.656,
+    "mape_percent": 24.57
+  },
+  "feature_importance_ranking": [
+    {
+      "rank": 1,
+      "feature": "Rotary Power",
+      "score": 0.7602648336077513,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 2,
+      "feature": "Hole Depth",
+      "score": 0.10783488051857157,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 3,
+      "feature": "Rotary Torque",
+      "score": 0.07437494570580312,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 4,
+      "feature": "Gamma at Bit",
+      "score": 0.05850310977082633,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 5,
+      "feature": "Differential Pressure",
+      "score": 0.0476643275292505,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 6,
+      "feature": "HookLoad x Torque",
+      "score": 0.03556421679443689,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 7,
+      "feature": "WOB per RPM",
+      "score": 0.02972091647219428,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 8,
+      "feature": "Weight on Bit",
+      "score": 0.02835264119463552,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 9,
+      "feature": "Rotary RPM",
+      "score": 0.02107259737290166,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 10,
+      "feature": "Torque per RPM",
+      "score": 0.01856869638723464,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 11,
+      "feature": "DiffPressure per WOB",
+      "score": 0.01183742562662824,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 12,
+      "feature": "Hook Load",
+      "score": 0.011710438249876743,
+      "score_type": "permutation_importance"
+    },
+    {
+      "rank": 13,
+      "feature": "Torque per WOB",
+      "score": 0.006156159239609949,
+      "score_type": "permutation_importance"
+    }
+  ],
   "feature_columns": [
     "Hole Depth",
     "Hook Load",
@@ -24,7 +147,13 @@
     "Rotary Torque",
     "Weight on Bit",
     "Differential Pressure",
-    "Gamma at Bit"
+    "Gamma at Bit",
+    "Rotary Power",
+    "Torque per WOB",
+    "WOB per RPM",
+    "Torque per RPM",
+    "DiffPressure per WOB",
+    "HookLoad x Torque"
   ],
   "target_column": "Rate Of Penetration"
 }
